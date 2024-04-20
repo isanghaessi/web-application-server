@@ -1,4 +1,4 @@
-package webserver.handler;
+package webserver.handler.user;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -12,6 +12,7 @@ import db.DataBase;
 import model.HttpRequest;
 import model.User;
 import util.HttpRequestUtils;
+import webserver.handler.Handler;
 
 public class JoinHandler implements Handler {
 	private static final Logger log = LoggerFactory.getLogger(JoinHandler.class);
@@ -25,11 +26,11 @@ public class JoinHandler implements Handler {
 	}
 
 	public void handle() throws IOException {
-		DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
-
 		if (Objects.isNull(httpRequest.getFormData())) {
 			throw new IllegalArgumentException(String.format("JoinHandler.handle - formData가 비었습니다. httpRequest: {%s}", httpRequest));
 		}
+
+		DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
 
 		User user = new User(httpRequest.getFormData());
 		DataBase.addUser(user);

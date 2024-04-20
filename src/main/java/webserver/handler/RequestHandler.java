@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,12 +14,12 @@ import model.HttpRequest;
 import type.HttpMethod;
 import type.HttpStatus;
 import util.HttpRequestUtils;
-import webserver.handler.model.HandlerKey;
 import webserver.handler.model.HandlerValue;
 import webserver.handler.type.HandlerMapping;
 
 public class RequestHandler extends Thread {
 	private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
+	private static final Pattern CSS_FILE_PATTERN = Pattern.compile(".css$");
 
 	private Socket connection;
 
@@ -43,10 +44,8 @@ public class RequestHandler extends Thread {
 			HttpMethod httpMethod = httpRequest.getHttpMethod();
 			String path = httpRequest.getPath();
 
-			if (HttpRequestUtils.isFileRequest(httpMethod, path)) {
+			if (!processNotFileRequest(httpRequest, dataOutputStream, httpMethod, path)) {
 				processFileRequest(dataOutputStream, path);
-			} else {
-				processNotFileRequest(httpRequest, dataOutputStream, httpMethod, path);
 			}
 		} catch (IllegalArgumentException illegalArgumentException) {
 			log.error(String.format("%s %d", HttpStatus.BAD_REQUEST.name(), HttpStatus.BAD_REQUEST.getCode()), illegalArgumentException);
@@ -68,8 +67,14 @@ public class RequestHandler extends Thread {
 	private void processFileRequest(DataOutputStream dataOutputStream, String path) throws IOException {
 		try {
 			byte[] body = HttpRequestUtils.getFile(path);
-			HttpRequestUtils.response200Header(dataOutputStream, body.length);
-			HttpRequestUtils.responseBody(dataOutputStream, body);
+
+			if (isCssRequest(path)) {
+				HttpRequestUtils.response200CssHeader(dataOutputStream, body.length);
+				HttpRequestUtils.responseBody(dataOutputStream, body);
+			} else {
+				HttpRequestUtils.response200HtmlHeader(dataOutputStream, body.length);
+				HttpRequestUtils.responseBody(dataOutputStream, body);
+			}
 
 			log.info(String.format("response colmplete! - path: {%s}", path));
 		} catch (IllegalArgumentException illegalArgumentException) {
@@ -79,13 +84,20 @@ public class RequestHandler extends Thread {
 		}
 	}
 
-	private static void processNotFileRequest(HttpRequest httpRequest, DataOutputStream dataOutputStream, HttpMethod httpMethod, String path) throws IllegalAccessException, IOException {
+	private static boolean processNotFileRequest(HttpRequest httpRequest, DataOutputStream dataOutputStream, HttpMethod httpMethod, String path) throws IllegalAccessException, IOException {
 		HandlerValue handlerValue = new HandlerValue(httpMethod, path);
-		HandlerMapping handlerMapping =  HandlerMapping.getByHandlerKey(handlerValue);
+		HandlerMapping handlerMapping = HandlerMapping.getByHandlerKey(handlerValue);
 		if (Objects.isNull(handlerMapping)) {
-			throw new IllegalAccessException(String.format("RequestHandler.processNotFileRequest - 지원하는 handlerMapping이 없습니다. httpRequest: {%s}", httpRequest));
+			log.debug(String.format("RequestHandler.processNotFileRequest - 지원하는 handlerMapping이 없습니다. httpRequest: {%s}", httpRequest));
+			return false;
 		}
 
 		handlerMapping.handle(httpRequest, dataOutputStream);
+
+		return true;
+	}
+
+	private boolean isCssRequest(String path) {
+		return CSS_FILE_PATTERN.matcher(path).find();
 	}
 }

@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import model.HttpRequest;
+import model.Pair;
 import type.HttpMethod;
 import type.HttpStatus;
 import webserver.handler.RequestHandler;
@@ -38,10 +39,8 @@ public class HttpRequestUtils {
 	private static final String QUERY_STRING_OR_FORM_DATA_EQUAL = "=";
 	private static final String COOKIE_DELIMITER = ";";
 
-	private static final Pattern PATH_EXTENSION_PATTERN = Pattern.compile("\\.(html|js|css|ico)$");
 	private static final Pattern REQUEST_BODY_PATTERN = Pattern.compile("\r\n\r\n(.*)$");
 
-	private static final int PATH_EXTENSION_GROUP_INDEX = 1;
 	private static final int HTTP_METHOD_INDEX = 0;
 	private static final int PATH_INDEX = 1;
 	private static final int REQUEST_BODY_PATTERN_GROUP_INDEX = 1;
@@ -79,18 +78,6 @@ public class HttpRequestUtils {
 
 	public static Map<String, String> parseFormDataOrQueryString(String valueString) {
 		return parseValues(valueString, QUERY_STRING_OR_FORM_DATA_DELIMITER);
-	}
-
-	public static boolean isFileRequest(HttpMethod httpMethod, String path) {
-		return HttpMethod.GET.equals(httpMethod) && (Objects.isNull(path) || path.isEmpty() || PATH_EXTENSION_PATTERN.matcher(path).find());
-	}
-
-	public static String getFileExtension(HttpMethod httpMethod, String path) {
-		if (!isFileRequest(httpMethod, path)) {
-			return null;
-		}
-
-		return PATH_EXTENSION_PATTERN.matcher(path).group(PATH_EXTENSION_GROUP_INDEX);
 	}
 
 	public static HttpRequest parse(InputStream inputStream) throws IOException, IllegalAccessException {
@@ -155,32 +142,54 @@ public class HttpRequestUtils {
 		return Files.readAllBytes(file.toPath());
 	}
 
-	public static void responseHeader(DataOutputStream dos, HttpStatus httpStatus) throws IOException {
-		dos.writeBytes(String.format("HTTP/1.1 %d %s \r\n", httpStatus.getCode(), httpStatus.getMessage()));
-		dos.writeBytes("\r\n");
+	public static void responseHeader(DataOutputStream dataOutputStream, HttpStatus httpStatus, Pair... cookies) throws IOException {
+		dataOutputStream.writeBytes(String.format("HTTP/1.1 %d %s \r\n", httpStatus.getCode(), httpStatus.getMessage()));
+		for (Pair cookie : cookies) {
+			dataOutputStream.writeBytes(String.format("Set-Cookie: %s=%s \r\n", cookie.getKey(), cookie.getValue()));
+		}
+		dataOutputStream.writeBytes("\r\n");
 	}
 
-	public static void response200Header(DataOutputStream dataOutputStream, int lengthOfBodyContent) throws IOException {
+	public static void response200HtmlHeader(DataOutputStream dataOutputStream, int lengthOfBodyContent, Pair... cookies) throws IOException {
 		dataOutputStream.writeBytes("HTTP/1.1 200 OK \r\n");
 		dataOutputStream.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
 		dataOutputStream.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+		for (Pair cookie : cookies) {
+			dataOutputStream.writeBytes(String.format("Set-Cookie: %s=%s \r\n", cookie.getKey(), cookie.getValue()));
+		}
+		dataOutputStream.writeBytes("\r\n");
+	}
+
+	public static void response200CssHeader(DataOutputStream dataOutputStream, int lengthOfBodyContent, Pair... cookies) throws IOException {
+		dataOutputStream.writeBytes("HTTP/1.1 200 OK \r\n");
+		dataOutputStream.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
+		dataOutputStream.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+		for (Pair cookie : cookies) {
+			dataOutputStream.writeBytes(String.format("Set-Cookie: %s=%s \r\n", cookie.getKey(), cookie.getValue()));
+		}
+		dataOutputStream.writeBytes("\r\n");
+	}
+
+	public static void redirect(DataOutputStream dataOutputStream, Pair... cookies) throws IOException {
+		dataOutputStream.writeBytes(String.format("HTTP/1.1 %d %s \r\n", HttpStatus.REDIRECT.getCode(), HttpStatus.REDIRECT.getMessage()));
+		dataOutputStream.writeBytes(String.format("Location: %s \r\n", DEFAULT_PATH));
+		for (Pair cookie : cookies) {
+			dataOutputStream.writeBytes(String.format("Set-Cookie: %s=%s \r\n", cookie.getKey(), cookie.getValue()));
+		}
+		dataOutputStream.writeBytes("\r\n");
+	}
+
+	public static void redirect(DataOutputStream dataOutputStream, String path, Pair... cookies) throws IOException {
+		dataOutputStream.writeBytes(String.format("HTTP/1.1 %d %s \r\n", HttpStatus.REDIRECT.getCode(), HttpStatus.REDIRECT.getMessage()));
+		dataOutputStream.writeBytes(String.format("Location: %s \r\n", path));
+		for (Pair cookie : cookies) {
+			dataOutputStream.writeBytes(String.format("Set-Cookie: %s=%s", cookie.getKey(), cookie.getValue()));
+		}
 		dataOutputStream.writeBytes("\r\n");
 	}
 
 	public static void responseBody(DataOutputStream dataOutputStream, byte[] body) throws IOException {
 		dataOutputStream.write(body, 0, body.length);
-	}
-
-	public static void redirect(DataOutputStream dataOutputStream) throws IOException {
-		dataOutputStream.writeBytes(String.format("HTTP/1.1 %d %s \r\n", HttpStatus.REDIRECT.getCode(), HttpStatus.REDIRECT.getMessage()));
-		dataOutputStream.writeBytes(String.format("Location: %s", DEFAULT_PATH));
-		dataOutputStream.writeBytes("\r\n");
-	}
-
-	public static void redirect(DataOutputStream dataOutputStream, String path) throws IOException {
-		dataOutputStream.writeBytes(String.format("HTTP/1.1 %d %s \r\n", HttpStatus.REDIRECT.getCode(), HttpStatus.REDIRECT.getMessage()));
-		dataOutputStream.writeBytes(String.format("Location: %s", path));
-		dataOutputStream.writeBytes("\r\n");
 	}
 
 	private static Map<String, String> parseHeaders(String headersString) {
@@ -208,59 +217,5 @@ public class HttpRequestUtils {
 		}
 
 		return new Pair(tokens[0], tokens[1]);
-	}
-
-	public static class Pair {
-		String key;
-		String value;
-
-		Pair(String key, String value) {
-			this.key = key.trim();
-			this.value = value.trim();
-		}
-
-		public String getKey() {
-			return key;
-		}
-
-		public String getValue() {
-			return value;
-		}
-
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + ((key == null) ? 0 : key.hashCode());
-			result = prime * result + ((value == null) ? 0 : value.hashCode());
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			Pair other = (Pair)obj;
-			if (key == null) {
-				if (other.key != null)
-					return false;
-			} else if (!key.equals(other.key))
-				return false;
-			if (value == null) {
-				if (other.value != null)
-					return false;
-			} else if (!value.equals(other.value))
-				return false;
-			return true;
-		}
-
-		@Override
-		public String toString() {
-			return "Pair [key=" + key + ", value=" + value + "]";
-		}
 	}
 }
