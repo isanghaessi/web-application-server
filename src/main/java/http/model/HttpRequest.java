@@ -1,11 +1,11 @@
-package model;
+package http.model;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import type.HttpMethod;
-import util.HttpRequestUtils;
+import http.type.HttpMethod;
+import http.util.HttpUtils;
 
 public class HttpRequest {
 	private static final String CONTENT_TYPE = "Content-Type";
@@ -83,7 +83,7 @@ public class HttpRequest {
 
 	private void setFormData() {
 		if (isFormDataRequest()) {
-			this.formData = HttpRequestUtils.parseFormDataOrQueryString(body);
+			this.formData = HttpUtils.parseFormDataOrQueryString(body);
 		}
 	}
 

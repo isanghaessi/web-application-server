@@ -1,4 +1,4 @@
-package util;
+package common.util;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;

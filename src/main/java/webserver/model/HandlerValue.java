@@ -1,6 +1,6 @@
-package webserver.handler.model;
+package webserver.model;
 
-import type.HttpMethod;
+import http.type.HttpMethod;
 
 public class HandlerValue {
 	private final HttpMethod httpMethod;

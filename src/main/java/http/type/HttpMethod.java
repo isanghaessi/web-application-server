@@ -1,4 +1,4 @@
-package type;
+package http.type;
 
 import java.util.Arrays;
 import java.util.Map;

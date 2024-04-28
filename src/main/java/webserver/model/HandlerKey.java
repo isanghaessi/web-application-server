@@ -1,8 +1,8 @@
-package webserver.handler.model;
+package webserver.model;
 
 import java.util.regex.Pattern;
 
-import type.HttpMethod;
+import http.type.HttpMethod;
 
 public class HandlerKey {
 	private final HttpMethod httpMethod;

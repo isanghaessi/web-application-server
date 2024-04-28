@@ -1,4 +1,4 @@
-package util;
+package http.util;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -20,13 +20,14 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
-import model.HttpRequest;
-import model.Pair;
-import type.HttpMethod;
-import type.HttpStatus;
+import http.model.HttpRequest;
+import common.model.Pair;
+import http.type.HttpMethod;
+import http.type.HttpStatus;
+import common.util.DecodeUtils;
 import webserver.handler.RequestHandler;
 
-public class HttpRequestUtils {
+public class HttpUtils {
 	private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
 
 	public static final String DEFAULT_PATH = "/index.html";
@@ -45,7 +46,7 @@ public class HttpRequestUtils {
 	private static final int PATH_INDEX = 1;
 	private static final int REQUEST_BODY_PATTERN_GROUP_INDEX = 1;
 
-	private HttpRequestUtils() {
+	private HttpUtils() {
 	}
 
 	/**

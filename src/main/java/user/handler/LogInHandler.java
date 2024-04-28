@@ -1,4 +1,4 @@
-package webserver.handler.user;
+package user.handler;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -9,10 +9,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import db.DataBase;
-import model.HttpRequest;
-import model.Pair;
-import model.User;
-import util.HttpRequestUtils;
+import http.model.HttpRequest;
+import common.model.Pair;
+import user.model.User;
+import http.util.HttpUtils;
 import webserver.handler.Handler;
 
 public class LogInHandler implements Handler {
@@ -44,10 +44,10 @@ public class LogInHandler implements Handler {
 		User user = new User(httpRequest.getFormData());
 
 		if (DataBase.isRegisteredUser(user)) {
-			HttpRequestUtils.redirect(dataOutputStream, LOG_IN_SUCESS_PAIR);
+			HttpUtils.redirect(dataOutputStream, LOG_IN_SUCESS_PAIR);
 			log.debug(String.format("LogInHandler.handle - 로그인에 성공했습니다. user: {%s}", user));
 		} else {
-			HttpRequestUtils.redirect(dataOutputStream, LOG_IN_FAIL_PATH, LOG_IN_FAIL_PAIR);
+			HttpUtils.redirect(dataOutputStream, LOG_IN_FAIL_PATH, LOG_IN_FAIL_PAIR);
 			log.debug(String.format("LogInHandler.handle - 로그인에 실패했습니다. user: {%s}", user));
 		}
 	}

@@ -10,12 +10,12 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import model.HttpRequest;
-import type.HttpMethod;
-import type.HttpStatus;
-import util.HttpRequestUtils;
-import webserver.handler.model.HandlerValue;
-import webserver.handler.type.HandlerMapping;
+import http.model.HttpRequest;
+import http.type.HttpMethod;
+import http.type.HttpStatus;
+import http.util.HttpUtils;
+import webserver.model.HandlerValue;
+import webserver.type.HandlerMapping;
 
 public class RequestHandler extends Thread {
 	private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
@@ -40,7 +40,7 @@ public class RequestHandler extends Thread {
 
 	private void response(InputStream inputStream, DataOutputStream dataOutputStream) throws IOException {
 		try {
-			HttpRequest httpRequest = HttpRequestUtils.parse(inputStream);
+			HttpRequest httpRequest = HttpUtils.parse(inputStream);
 			HttpMethod httpMethod = httpRequest.getHttpMethod();
 			String path = httpRequest.getPath();
 
@@ -50,15 +50,15 @@ public class RequestHandler extends Thread {
 		} catch (IllegalArgumentException illegalArgumentException) {
 			log.error(String.format("%s %d", HttpStatus.BAD_REQUEST.name(), HttpStatus.BAD_REQUEST.getCode()), illegalArgumentException);
 
-			HttpRequestUtils.responseHeader(dataOutputStream, HttpStatus.BAD_REQUEST);
+			HttpUtils.responseHeader(dataOutputStream, HttpStatus.BAD_REQUEST);
 		} catch (IllegalAccessException illegalAccessException) {
 			log.error(String.format("%s %d", HttpStatus.NOT_ALLOWED_METHOD.name(), HttpStatus.NOT_ALLOWED_METHOD.getCode()), illegalAccessException);
 
-			HttpRequestUtils.responseHeader(dataOutputStream, HttpStatus.NOT_ALLOWED_METHOD);
+			HttpUtils.responseHeader(dataOutputStream, HttpStatus.NOT_ALLOWED_METHOD);
 		} catch (Exception exception) {
 			log.error(String.format("%s %d", HttpStatus.SERVER_ERROR.name(), HttpStatus.SERVER_ERROR.getCode()), exception);
 
-			HttpRequestUtils.responseHeader(dataOutputStream, HttpStatus.SERVER_ERROR);
+			HttpUtils.responseHeader(dataOutputStream, HttpStatus.SERVER_ERROR);
 		} finally {
 			dataOutputStream.flush();
 		}
@@ -66,21 +66,21 @@ public class RequestHandler extends Thread {
 
 	private void processFileRequest(DataOutputStream dataOutputStream, String path) throws IOException {
 		try {
-			byte[] body = HttpRequestUtils.getFile(path);
+			byte[] body = HttpUtils.getFile(path);
 
 			if (isCssRequest(path)) {
-				HttpRequestUtils.response200CssHeader(dataOutputStream, body.length);
-				HttpRequestUtils.responseBody(dataOutputStream, body);
+				HttpUtils.response200CssHeader(dataOutputStream, body.length);
+				HttpUtils.responseBody(dataOutputStream, body);
 			} else {
-				HttpRequestUtils.response200HtmlHeader(dataOutputStream, body.length);
-				HttpRequestUtils.responseBody(dataOutputStream, body);
+				HttpUtils.response200HtmlHeader(dataOutputStream, body.length);
+				HttpUtils.responseBody(dataOutputStream, body);
 			}
 
 			log.info(String.format("response colmplete! - path: {%s}", path));
 		} catch (IllegalArgumentException illegalArgumentException) {
 			log.error(String.format("%s %d - path: {%s}", HttpStatus.NOT_FOUND.name(), HttpStatus.NOT_FOUND.getCode(), path), illegalArgumentException);
 
-			HttpRequestUtils.responseHeader(dataOutputStream, HttpStatus.NOT_ALLOWED_METHOD);
+			HttpUtils.responseHeader(dataOutputStream, HttpStatus.NOT_ALLOWED_METHOD);
 		}
 	}
 

@@ -1,16 +1,16 @@
-package webserver.handler.type;
+package webserver.type;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 
-import model.HttpRequest;
-import type.HttpMethod;
-import webserver.handler.user.GetUsersHandler;
-import webserver.handler.user.JoinHandler;
-import webserver.handler.user.LogInHandler;
-import webserver.handler.model.HandlerKey;
-import webserver.handler.model.HandlerValue;
+import http.model.HttpRequest;
+import http.type.HttpMethod;
+import user.handler.GetUsersHandler;
+import user.handler.JoinHandler;
+import user.handler.LogInHandler;
+import webserver.model.HandlerKey;
+import webserver.model.HandlerValue;
 
 public enum HandlerMapping {
 	JOIN(new HandlerKey(HttpMethod.POST, "^/user/create")) {

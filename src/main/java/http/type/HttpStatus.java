@@ -1,4 +1,4 @@
-package type;
+package http.type;
 
 public enum HttpStatus {
 	REDIRECT(302, "Found"),

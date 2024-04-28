@@ -1,4 +1,4 @@
-package model;
+package user.model;
 
 import java.util.Map;
 

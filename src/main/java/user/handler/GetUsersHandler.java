@@ -1,4 +1,4 @@
-package webserver.handler.user;
+package user.handler;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -10,9 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import db.DataBase;
-import model.HttpRequest;
-import model.User;
-import util.HttpRequestUtils;
+import http.model.HttpRequest;
+import user.model.User;
+import http.util.HttpUtils;
 import webserver.handler.Handler;
 
 public class GetUsersHandler implements Handler {
@@ -32,13 +32,13 @@ public class GetUsersHandler implements Handler {
 		DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
 
 		if (!httpRequest.isLoggedIn()) {
-			HttpRequestUtils.redirect(dataOutputStream, LOG_IN_PATH);
+			HttpUtils.redirect(dataOutputStream, LOG_IN_PATH);
 		}
 
 		String body = makeUserListHtml(DataBase.findAll());
 
-		HttpRequestUtils.response200HtmlHeader(dataOutputStream, body.length());
-		HttpRequestUtils.responseBody(dataOutputStream, body.getBytes(StandardCharsets.UTF_8));
+		HttpUtils.response200HtmlHeader(dataOutputStream, body.length());
+		HttpUtils.responseBody(dataOutputStream, body.getBytes(StandardCharsets.UTF_8));
 	}
 
 	private String makeUserListHtml(Collection<User> users) {

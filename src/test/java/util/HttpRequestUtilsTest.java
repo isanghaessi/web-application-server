@@ -7,38 +7,39 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import util.HttpRequestUtils.Pair;
+import http.util.HttpUtils;
+import http.util.HttpUtils.Pair;
 
 public class HttpRequestUtilsTest {
     @Test
     public void parseQueryString() {
         String queryString = "userId=javajigi";
-        Map<String, String> parameters = HttpRequestUtils.parseQueryString(queryString);
+        Map<String, String> parameters = HttpUtils.parseQueryString(queryString);
         assertThat(parameters.get("userId"), is("javajigi"));
         assertThat(parameters.get("password"), is(nullValue()));
 
         queryString = "userId=javajigi&password=password2";
-        parameters = HttpRequestUtils.parseQueryString(queryString);
+        parameters = HttpUtils.parseQueryString(queryString);
         assertThat(parameters.get("userId"), is("javajigi"));
         assertThat(parameters.get("password"), is("password2"));
     }
 
     @Test
     public void parseQueryString_null() {
-        Map<String, String> parameters = HttpRequestUtils.parseQueryString(null);
+        Map<String, String> parameters = HttpUtils.parseQueryString(null);
         assertThat(parameters.isEmpty(), is(true));
 
-        parameters = HttpRequestUtils.parseQueryString("");
+        parameters = HttpUtils.parseQueryString("");
         assertThat(parameters.isEmpty(), is(true));
 
-        parameters = HttpRequestUtils.parseQueryString(" ");
+        parameters = HttpUtils.parseQueryString(" ");
         assertThat(parameters.isEmpty(), is(true));
     }
 
     @Test
     public void parseQueryString_invalid() {
         String queryString = "userId=javajigi&password";
-        Map<String, String> parameters = HttpRequestUtils.parseQueryString(queryString);
+        Map<String, String> parameters = HttpUtils.parseQueryString(queryString);
         assertThat(parameters.get("userId"), is("javajigi"));
         assertThat(parameters.get("password"), is(nullValue()));
     }
@@ -46,7 +47,7 @@ public class HttpRequestUtilsTest {
     @Test
     public void parseCookies() {
         String cookies = "logined=true; JSessionId=1234";
-        Map<String, String> parameters = HttpRequestUtils.parseCookies(cookies);
+        Map<String, String> parameters = HttpUtils.parseCookies(cookies);
         assertThat(parameters.get("logined"), is("true"));
         assertThat(parameters.get("JSessionId"), is("1234"));
         assertThat(parameters.get("session"), is(nullValue()));
@@ -54,20 +55,20 @@ public class HttpRequestUtilsTest {
 
     @Test
     public void getKeyValue() throws Exception {
-        Pair pair = HttpRequestUtils.getKeyValue("userId=javajigi", "=");
+        Pair pair = HttpUtils.getKeyValue("userId=javajigi", "=");
         assertThat(pair, is(new Pair("userId", "javajigi")));
     }
 
     @Test
     public void getKeyValue_invalid() throws Exception {
-        Pair pair = HttpRequestUtils.getKeyValue("userId", "=");
+        Pair pair = HttpUtils.getKeyValue("userId", "=");
         assertThat(pair, is(nullValue()));
     }
 
     @Test
     public void parseHeader() throws Exception {
         String header = "Content-Length: 59";
-        Pair pair = HttpRequestUtils.parseHeader(header);
+        Pair pair = HttpUtils.parseHeader(header);
         assertThat(pair, is(new Pair("Content-Length", "59")));
     }
 }
