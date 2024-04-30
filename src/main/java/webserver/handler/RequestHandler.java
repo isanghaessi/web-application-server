@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import http.model.HttpRequest;
+import http.model.HttpResponse;
 import http.type.HttpMethod;
 import http.type.HttpStatus;
 import http.util.HttpUtils;
@@ -27,6 +28,7 @@ public class RequestHandler extends Thread {
 		this.connection = connectionSocket;
 	}
 
+	@Override
 	public void run() {
 		log.debug("New Client Connect! Connected IP : {}, Port : {}", connection.getInetAddress(), connection.getPort());
 
@@ -50,15 +52,18 @@ public class RequestHandler extends Thread {
 		} catch (IllegalArgumentException illegalArgumentException) {
 			log.error(String.format("%s %d", HttpStatus.BAD_REQUEST.name(), HttpStatus.BAD_REQUEST.getCode()), illegalArgumentException);
 
-			HttpUtils.responseHeader(dataOutputStream, HttpStatus.BAD_REQUEST);
+			HttpResponse.makeBadRequest()
+				.response(dataOutputStream);
 		} catch (IllegalAccessException illegalAccessException) {
 			log.error(String.format("%s %d", HttpStatus.NOT_ALLOWED_METHOD.name(), HttpStatus.NOT_ALLOWED_METHOD.getCode()), illegalAccessException);
 
-			HttpUtils.responseHeader(dataOutputStream, HttpStatus.NOT_ALLOWED_METHOD);
+			HttpResponse.makeNotAllowedMethod()
+				.response(dataOutputStream);
 		} catch (Exception exception) {
 			log.error(String.format("%s %d", HttpStatus.SERVER_ERROR.name(), HttpStatus.SERVER_ERROR.getCode()), exception);
 
-			HttpUtils.responseHeader(dataOutputStream, HttpStatus.SERVER_ERROR);
+			HttpResponse.makeServerError()
+				.response(dataOutputStream);
 		} finally {
 			dataOutputStream.flush();
 		}
@@ -69,22 +74,23 @@ public class RequestHandler extends Thread {
 			byte[] body = HttpUtils.getFile(path);
 
 			if (isCssRequest(path)) {
-				HttpUtils.response200CssHeader(dataOutputStream, body.length);
-				HttpUtils.responseBody(dataOutputStream, body);
+				HttpResponse.makeCssHttpResponse(body)
+					.response(dataOutputStream);
 			} else {
-				HttpUtils.response200HtmlHeader(dataOutputStream, body.length);
-				HttpUtils.responseBody(dataOutputStream, body);
+				HttpResponse.makeHtmlHttpResponse(body)
+					.response(dataOutputStream);
 			}
 
 			log.info(String.format("response colmplete! - path: {%s}", path));
 		} catch (IllegalArgumentException illegalArgumentException) {
 			log.error(String.format("%s %d - path: {%s}", HttpStatus.NOT_FOUND.name(), HttpStatus.NOT_FOUND.getCode(), path), illegalArgumentException);
 
-			HttpUtils.responseHeader(dataOutputStream, HttpStatus.NOT_ALLOWED_METHOD);
+			HttpResponse.makeNotAllowedMethod()
+				.response(dataOutputStream);
 		}
 	}
 
-	private static boolean processNotFileRequest(HttpRequest httpRequest, DataOutputStream dataOutputStream, HttpMethod httpMethod, String path) throws IllegalAccessException, IOException {
+	private static boolean processNotFileRequest(HttpRequest httpRequest, DataOutputStream dataOutputStream, HttpMethod httpMethod, String path) throws IOException {
 		HandlerValue handlerValue = new HandlerValue(httpMethod, path);
 		HandlerMapping handlerMapping = HandlerMapping.getByHandlerKey(handlerValue);
 		if (Objects.isNull(handlerMapping)) {

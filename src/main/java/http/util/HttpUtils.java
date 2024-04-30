@@ -1,7 +1,6 @@
 package http.util;
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,21 +14,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
-import http.model.HttpRequest;
 import common.model.Pair;
-import http.type.HttpMethod;
-import http.type.HttpStatus;
 import common.util.DecodeUtils;
-import webserver.handler.RequestHandler;
+import http.model.HttpRequest;
+import http.type.HttpMethod;
 
 public class HttpUtils {
-	private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
-
 	public static final String DEFAULT_PATH = "/index.html";
 
 	private static final String WEBAPP_PATH = "./webapp";
@@ -141,56 +133,6 @@ public class HttpUtils {
 		}
 
 		return Files.readAllBytes(file.toPath());
-	}
-
-	public static void responseHeader(DataOutputStream dataOutputStream, HttpStatus httpStatus, Pair... cookies) throws IOException {
-		dataOutputStream.writeBytes(String.format("HTTP/1.1 %d %s \r\n", httpStatus.getCode(), httpStatus.getMessage()));
-		for (Pair cookie : cookies) {
-			dataOutputStream.writeBytes(String.format("Set-Cookie: %s=%s \r\n", cookie.getKey(), cookie.getValue()));
-		}
-		dataOutputStream.writeBytes("\r\n");
-	}
-
-	public static void response200HtmlHeader(DataOutputStream dataOutputStream, int lengthOfBodyContent, Pair... cookies) throws IOException {
-		dataOutputStream.writeBytes("HTTP/1.1 200 OK \r\n");
-		dataOutputStream.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
-		dataOutputStream.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
-		for (Pair cookie : cookies) {
-			dataOutputStream.writeBytes(String.format("Set-Cookie: %s=%s \r\n", cookie.getKey(), cookie.getValue()));
-		}
-		dataOutputStream.writeBytes("\r\n");
-	}
-
-	public static void response200CssHeader(DataOutputStream dataOutputStream, int lengthOfBodyContent, Pair... cookies) throws IOException {
-		dataOutputStream.writeBytes("HTTP/1.1 200 OK \r\n");
-		dataOutputStream.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
-		dataOutputStream.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
-		for (Pair cookie : cookies) {
-			dataOutputStream.writeBytes(String.format("Set-Cookie: %s=%s \r\n", cookie.getKey(), cookie.getValue()));
-		}
-		dataOutputStream.writeBytes("\r\n");
-	}
-
-	public static void redirect(DataOutputStream dataOutputStream, Pair... cookies) throws IOException {
-		dataOutputStream.writeBytes(String.format("HTTP/1.1 %d %s \r\n", HttpStatus.REDIRECT.getCode(), HttpStatus.REDIRECT.getMessage()));
-		dataOutputStream.writeBytes(String.format("Location: %s \r\n", DEFAULT_PATH));
-		for (Pair cookie : cookies) {
-			dataOutputStream.writeBytes(String.format("Set-Cookie: %s=%s \r\n", cookie.getKey(), cookie.getValue()));
-		}
-		dataOutputStream.writeBytes("\r\n");
-	}
-
-	public static void redirect(DataOutputStream dataOutputStream, String path, Pair... cookies) throws IOException {
-		dataOutputStream.writeBytes(String.format("HTTP/1.1 %d %s \r\n", HttpStatus.REDIRECT.getCode(), HttpStatus.REDIRECT.getMessage()));
-		dataOutputStream.writeBytes(String.format("Location: %s \r\n", path));
-		for (Pair cookie : cookies) {
-			dataOutputStream.writeBytes(String.format("Set-Cookie: %s=%s", cookie.getKey(), cookie.getValue()));
-		}
-		dataOutputStream.writeBytes("\r\n");
-	}
-
-	public static void responseBody(DataOutputStream dataOutputStream, byte[] body) throws IOException {
-		dataOutputStream.write(body, 0, body.length);
 	}
 
 	private static Map<String, String> parseHeaders(String headersString) {

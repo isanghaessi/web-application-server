@@ -1,5 +1,7 @@
 package user.handler;
 
+import static http.util.HttpUtils.*;
+
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -10,8 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import db.DataBase;
 import http.model.HttpRequest;
+import http.model.HttpResponse;
 import user.model.User;
-import http.util.HttpUtils;
 import webserver.handler.Handler;
 
 public class JoinHandler implements Handler {
@@ -35,7 +37,8 @@ public class JoinHandler implements Handler {
 		User user = new User(httpRequest.getFormData());
 		DataBase.addUser(user);
 
-		HttpUtils.redirect(dataOutputStream);
+		HttpResponse.makeEmpty()
+			.redirect(dataOutputStream, DEFAULT_PATH);
 
 		log.info(String.format("JoinHandler.handle - user 회원가입에 성공했습니다. userMap: {%s}", DataBase.findAll()));
 	}
