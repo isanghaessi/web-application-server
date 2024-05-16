@@ -57,18 +57,6 @@ public class HttpUtils {
 		return parseValues(cookies, COOKIE_DELIMITER);
 	}
 
-	private static Map<String, String> parseValues(String values, String separator) {
-		if (Strings.isNullOrEmpty(values)) {
-			return Maps.newHashMap();
-		}
-
-		String[] tokens = values.split(separator);
-		return Arrays.stream(tokens)
-			.map(token -> getKeyValue(token, QUERY_STRING_OR_FORM_DATA_EQUAL))
-			.filter(Objects::nonNull)
-			.collect(Collectors.toMap(pair -> DecodeUtils.decodeURI(pair.getKey()), pair -> DecodeUtils.decodeURI(pair.getValue())));
-	}
-
 	public static Map<String, String> parseFormDataOrQueryString(String valueString) {
 		return parseValues(valueString, QUERY_STRING_OR_FORM_DATA_DELIMITER);
 	}
@@ -89,12 +77,9 @@ public class HttpUtils {
 		}
 
 		String httpRequestMethod = tokens[HTTP_METHOD_INDEX];
-		if (HttpMethod.getByMethod(httpRequestMethod) == null) {
-			throw new IllegalAccessException(String.format("RequestHandler.parse - 지원하지 않는 메소드입니다. method: {%s}", httpRequestMethod));
-		}
 		HttpMethod httpMethod = HttpMethod.getByMethod(httpRequestMethod);
 		if (Objects.isNull(httpMethod)) {
-			throw new IllegalArgumentException(String.format("RequestHandler.parse - 요청의 헤더 첫줄이 이상합니다. firstLine: {%s}", firstLine));
+			throw new IllegalAccessException(String.format("RequestHandler.parse - 지원하지 않는 메소드입니다. method: {%s}", httpRequestMethod));
 		}
 		httpRequest.setHttpMethod(httpMethod);
 
@@ -147,6 +132,18 @@ public class HttpUtils {
 		}
 
 		return headers;
+	}
+
+	private static Map<String, String> parseValues(String values, String separator) {
+		if (Strings.isNullOrEmpty(values)) {
+			return Maps.newHashMap();
+		}
+
+		String[] tokens = values.split(separator);
+		return Arrays.stream(tokens)
+			.map(token -> getKeyValue(token, QUERY_STRING_OR_FORM_DATA_EQUAL))
+			.filter(Objects::nonNull)
+			.collect(Collectors.toMap(pair -> DecodeUtils.decodeURI(pair.getKey()), pair -> DecodeUtils.decodeURI(pair.getValue())));
 	}
 
 	private static Pair getKeyValue(String keyValue, String regex) {
